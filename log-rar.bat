@@ -1,6 +1,7 @@
-@SET  logrartitle=ÈÕÖ¾ÎÄ¼þÑ¹Ëõ±¸·Ý¹¤¾ß LOG-RAR 0.3
+@SET  logrartitle=ÈÕÖ¾ÎÄ¼þÑ¹Ëõ±¸·Ý¹¤¾ß LOG-RAR 0.4
 
-
+@REM 0.4, 2017-04-02, same.
+@REM   ÐÂÔö£ºÖ§³ÖÅäÖÃµ±ÌìÈÕÖ¾ÎÄ¼þÇåµ¥ log-today-fmt.lst£¬´¦Àí log-rar.lst Ê±ÈçÆ¥Åä»áÌø¹ý²»´¦Àí(×¢£ºy¡¢m¡¢dÓÃ!À¨Æð£¬²»ÄÜÓÃ%)¡£
 @REM 0.3, 2017-01-04, same.
 @REM   ÐÂÔö£º°´ÄêºÍÔÂ·Ö×ÓÄ¿Â¼¡£
 @REM   ÐÞÕý£º´¦ÀíÔÂºÍÈÕ¼Ó0±äË«Î»ÊýÊ±»áÒÀÀµÏµÍ³¶ÌÈÕÆÚ¸ñÊ½µÄÎÊÌâ¡£
@@ -13,7 +14,7 @@
 @REM 0.0, 2016-12-23, same.
 @REM   ³õÊ¼°æ±¾¡£
 
-
+@SETLOCAL EnableDelayedExpansion
 @ECHO %logrartitle%
 
 
@@ -81,14 +82,7 @@ IF /I 1%m% LSS 100 (SET m=0%m%)
 IF /I 1%d% LSS 100 (SET d=0%d%)
 
 
-REM -- *** ÔÚÕâÀïÐÞ¸ÄÈÕÖ¾ÎÄ¼þÃû¸ñÊ½todaylog ***
-REM -- ÀýÈç£º
-REM SET todaylog=%y%%sep%%m%%sep%%d%.log
-REM -- *** ÕâÊÇ»ªÏÄ¶¯Á¦Ó¦ÓÃ·þÎñÆ÷µÄÈÕÖ¾¸ñÊ½ ***
-SET todaylog=mawas.log.%m%.%d%.txt
-
-
-REM -- µ¥Ò»µÄÐè¸ÄÃûµÄÈÕÖ¾ÎÄ¼þÇ°×º
+REM -- µ¥Ò»µÄÐè¸ÄÃûµÄÈÕÖ¾ÎÄ¼þÇ°×º(¸ÄÃûÊ±Ìí¼ÓµÄÇ°×º)
 SET prefixren=%y%%m%%d%_
 
 
@@ -104,20 +98,34 @@ IF NOT EXIST %wd%\log-bak\%y% (mkdir %wd%\log-bak\%y%)
 REM -- Èç¹û²»´æÔÚ£¬Ôò´´½¨ log-bak\[year]\[month] ×ÓÄ¿Â¼
 IF NOT EXIST %wd%\log-bak\%y%\%m% (mkdir %wd%\log-bak\%y%\%m%)
 
+
 REM -- Ñ¹Ëõ log-rar.lst ÀïÁÐ³öµÄ´óÐ¡³¬¹ý 8192 ×Ö½ÚµÄÎÄ¼þµ½ log-bak\[year]\[month] ×ÓÄ¿Â¼Àï£¬²¢É¾³ýÔ­ÎÄ¼þ(-df)£¬»ò·ÅÈë»ØÊÕÕ¾(½«-df»»³É-dr)
 REM -- ÈçÕÒ²»µ½ÎÄ¼þ£¬Ôò¼ÓÉÏÄê·ÝÇ°×ºÔÙÊÔÒ»´Î
-FOR /F "TOKENS=1" %%f IN (%wd%\log-rar.lst) DO  IF EXIST %wd%\%%f  (
-        IF NOT "%%f"=="%todaylog%" (%wd%\rar a -df -ep1 -sm8192  %wd%\log-bak\%y%\%m%\%%f.rar  %wd%\%%f)
+FOR /F "TOKENS=1" %%f IN (%wd%\log-rar.lst) DO (
+    IF EXIST %wd%\%%f  (
+        IF EXIST %wd%\log-today-fmt.lst (FOR /F "TOKENS=1" %%t IN (%wd%\log-today-fmt.lst) DO (IF "%%f"=="%%t" GOTO NEXT_RAR))
+        %wd%\rar a -df -ep1 -sm8192  %wd%\log-bak\%y%\%m%\%%f.rar  %wd%\%%f
     ) ELSE IF EXIST %wd%\%year%%%f  (
-        IF NOT "%year%%%f"=="%todaylog%" (%wd%\rar a -df -ep1 -sm8192  %wd%\log-bak\%y%\%m%\%year%%%f.rar  %wd%\%year%%%f)
+        IF EXIST %wd%\log-today-fmt.lst (FOR /F "TOKENS=1" %%t IN (%wd%\log-today-fmt.lst) DO (IF "%year%%%f"=="%%t" GOTO NEXT_RAR))
+        %wd%\rar a -df -ep1 -sm8192  %wd%\log-bak\%y%\%m%\%year%%%f.rar  %wd%\%year%%%f
     )
+    :NEXT_RAR
+    REM NEXT
+)
+
 
 REM -- ÒÆ¶¯ log-rar.lst ÀïÁÐ³öµÄÎÄ¼þµ½ log-bak\[year]\[month] ×ÓÄ¿Â¼Àï£¬ÈçÉÏÒ»²½ÖèÀï´óÐ¡Î´³¬¹ý8192×Ö½Ú¶øÎ´±»Ñ¹ËõµÄ
-FOR /F "TOKENS=1" %%f IN (%wd%\log-rar.lst) DO  IF EXIST %wd%\%%f  (
-        IF NOT "%%f"=="%todaylog%" (move /y  %wd%\%%f  %wd%\log-bak\%y%\%m%\%%f)
+FOR /F "TOKENS=1" %%f IN (%wd%\log-rar.lst) DO (
+    IF EXIST %wd%\%%f  (
+        IF EXIST %wd%\log-today-fmt.lst (FOR /F "TOKENS=1" %%t IN (%wd%\log-today-fmt.lst) DO (IF "%%f"=="%%t" GOTO NEXT_MOVE))
+        move /y  %wd%\%%f  %wd%\log-bak\%y%\%m%\%%f
     ) ELSE IF EXIST %wd%\%year%%%f  (
-        IF NOT "%year%%%f"=="%todaylog%" (move /y  %wd%\%year%%%f  %wd%\log-bak\%y%\%m%\%year%%%f)
+        IF EXIST %wd%\log-today-fmt.lst (FOR /F "TOKENS=1" %%t IN (%wd%\log-today-fmt.lst) DO (IF "%year%%%f"=="%%t" GOTO NEXT_MOVE))
+        move /y  %wd%\%year%%%f  %wd%\log-bak\%y%\%m%\%year%%%f
     )
+    :NEXT_MOVE
+    REM NEXT
+)
 
 
 :RENAME_LOG
@@ -126,7 +134,8 @@ REM -- Ö§³ÖÃ¿Ìì×î¶àÑ¹Ëõ´ÎÊý£¨°æ±¾£©£¬ÓÉ[-verNN]ÅäÖÃ£¬Èç[-ver48]£¬¿ÉÖ§³ÖÃ¿¸ô°ëÐ¡Ê
 REM -- Ð£ÑéÊÇ·ñ´æÔÚ log-ren-rar.lst ÈÕÖ¾Çåµ¥ÎÄ¼þ
 IF NOT EXIST %wd%\log-ren-rar.lst (GOTO INIT_LOG)
 
-FOR /F "TOKENS=1" %%f IN (%wd%\log-ren-rar.lst) DO  IF EXIST %wd%\%%f  (
+FOR /F "TOKENS=1" %%f IN (%wd%\log-ren-rar.lst) DO (
+    IF EXIST %wd%\%%f  (
         REM ÎÄ¼þ³¬¹ýÒ»¶¨´óÐ¡²Å´¦Àí
         IF /I %%~zf GEQ 1048576  (
             rename %wd%\%%f %prefixren%%%f
@@ -139,6 +148,7 @@ FOR /F "TOKENS=1" %%f IN (%wd%\log-ren-rar.lst) DO  IF EXIST %wd%\%%f  (
     ) ELSE IF EXIST %wd%\%prefixren%%%f  (
             %wd%\rar a -df -ep1 -ver100 %wd%\log-bak\%y%\%m%\%prefixren%%%f.rar  %wd%\%prefixren%%%f
     )
+)
 
 
 :INIT_LOG
@@ -146,11 +156,13 @@ REM -- Ä³Ð©µ¥Ò»µÄ£¬²»·ÖÈÕÆÚµÄÈÕÖ¾ÎÄ¼þÉ¾³ýºóÐèÒªÐÂ½¨Ò»¸ö¿ÕµÄ£¬·ñÔò±¸·ÝÖ®ºóÐèÐ´Èëµ
 REM -- Ð£ÑéÊÇ·ñ´æÔÚ log-init.lst ÈÕÖ¾Çåµ¥ÎÄ¼þ
 IF NOT EXIST %wd%\log-init.lst (GOTO DONE)
 
-FOR /F "TOKENS=1" %%f IN (%wd%\log-init.lst) DO  IF NOT EXIST %wd%\%%f  (
+FOR /F "TOKENS=1" %%f IN (%wd%\log-init.lst) DO (
+    IF NOT EXIST %wd%\%%f  (
         FOR /F "usebackq tokens=1" %%D IN (`DATE /T`) DO FOR /F "usebackq tokens=1" %%T IN (`TIME /T`) DO (
             ECHO -- %%D %%T %logrartitle% >> %wd%\%%f
         )
     )
+)
 
 
 GOTO DONE
